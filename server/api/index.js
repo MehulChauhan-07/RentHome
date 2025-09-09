@@ -1,26 +1,31 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const helmet = require("helmet");
-const compression = require("compression");
-const morgan = require("morgan");
-const cookieParser = require("cookie-parser");
-const rateLimit = require("express-rate-limit");
-const path = require("path");
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import dotenv from "dotenv";
+import helmet from "helmet";
+import compression from "compression";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import rateLimit from "express-rate-limit";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// ES modules compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Load environment variables
-dotenv.config();
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
 // Import routes
-const authRoutes = require("../routes/auth");
-const userRoutes = require("../routes/users");
-const propertyRoutes = require("../routes/properties");
-const adminRoutes = require("../routes/admin");
+import authRoutes from "../routes/auth.js";
+import userRoutes from "../routes/users.js";
+import propertyRoutes from "../routes/properties.js";
+import adminRoutes from "../routes/admin.js";
 
 // Import middleware
-const { errorHandler } = require("../middleware/errorHandler");
-// const { notFound } = require('./middleware/notFound');
+import { errorHandler } from "../middleware/errorHandler.js";
 
 // Initialize Express app
 const app = express();
@@ -80,11 +85,13 @@ if (process.env.NODE_ENV === "development") {
   app.use(morgan("combined"));
 }
 
-// Serve static files
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+// Serve static files (disabled in production/Vercel)
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+}
 
 // Initialize Passport
-const passport = require("../config/passport");
+import passport from "../config/passport.js";
 app.use(passport.initialize());
 
 // Health check endpoint
@@ -117,48 +124,71 @@ app.get("/", (req, res) => {
 // app.use(notFound);
 app.use(errorHandler);
 
-// Database connection
+// Database connection optimized for serverless
+let cachedConnection = null;
+
 const connectDB = async () => {
+  // If we have a cached connection and it's ready, reuse it
+  if (cachedConnection && mongoose.connection.readyState === 1) {
+    return cachedConnection;
+  }
+
   try {
     const mongoURI =
       process.env.NODE_ENV === "production"
-        ? process.env.MONGODB_URI_PROD
+        ? process.env.MONGODB_URI_PROD || process.env.MONGODB_URI
         : process.env.MONGODB_URI;
 
-    await mongoose.connect(mongoURI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    if (!mongoURI) {
+      throw new Error('MongoDB URI is not defined in environment variables');
+    }
+
+    // Configure connection for serverless
+    const connection = await mongoose.connect(mongoURI, {
+      serverSelectionTimeoutMS: 5000,
+      maxPoolSize: 10,
+      minPoolSize: 1,
+      maxIdleTimeMS: 30000,
+      bufferCommands: false,
     });
 
+    cachedConnection = connection;
     console.log(`MongoDB Connected: ${mongoose.connection.host}`);
+    return connection;
   } catch (error) {
     console.error("MongoDB connection error:", error);
-    process.exit(1);
+    cachedConnection = null;
+    throw error;
   }
 };
 
-// Handle unhandled promise rejections
-process.on("unhandledRejection", (err) => {
-  console.error("Unhandled Rejection:", err);
-  process.exit(1);
-});
-
-// Handle uncaught exceptions
-process.on("uncaughtException", (err) => {
-  console.error("Uncaught Exception:", err);
-  process.exit(1);
-});
-
-// Graceful shutdown
-process.on("SIGTERM", () => {
-  console.log("SIGTERM received. Shutting down gracefully...");
-  mongoose.connection.close(() => {
-    console.log("MongoDB connection closed.");
-    process.exit(0);
+// Handle unhandled promise rejections (only in non-serverless environments)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  process.on("unhandledRejection", (err) => {
+    console.error("Unhandled Rejection:", err);
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   });
-});
 
-// Start server
+  process.on("uncaughtException", (err) => {
+    console.error("Uncaught Exception:", err);
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
+  });
+
+  // Graceful shutdown
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM received. Shutting down gracefully...");
+    mongoose.connection.close(() => {
+      console.log("MongoDB connection closed.");
+      process.exit(0);
+    });
+  });
+}
+
+// Start server (for local development)
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
@@ -174,9 +204,22 @@ const startServer = async () => {
   return server;
 };
 
-// Start the server if this file is run directly
-if (require.main === module) {
-  startServer().catch(console.error);
+// Start the server if running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  const isMainModule = process.argv[1] && (process.argv[1].endsWith('index.js') || process.argv[1].includes('api/index.js'));
+  if (isMainModule || import.meta.url === `file://${process.argv[1]}`) {
+    startServer().catch(console.error);
+  }
 }
 
-module.exports = { app, startServer };
+// Vercel serverless handler - must be default export
+export default async function handler(req, res) {
+  // Ensure database connection
+  await connectDB();
+  
+  // Handle the request using Express app
+  return app(req, res);
+}
+
+// Named exports for local development
+export { app, startServer };
