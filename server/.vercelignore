@@ -1,0 +1,13 @@
+node_modules
+.env.local
+.env.development
+*.log
+.DS_Store
+.vscode
+.git
+uploads/temp
+test/
+*.test.js
+jest.config.js
+nodemon.json
+README.md

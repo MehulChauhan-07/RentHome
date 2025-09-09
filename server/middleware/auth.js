@@ -1,6 +1,6 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const passport = require('passport');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import passport from 'passport';
 
 // Generate JWT Token
 const generateToken = (id) => {
@@ -72,7 +72,7 @@ const resourceOwnerOrAdmin = (resourceField = 'owner') => {
 // Middleware to check if user can access property
 const propertyAccess = async (req, res, next) => {
   try {
-    const Property = require('../models/Property');
+    const Property = (await import('../models/Property.js')).default;
     const propertyId = req.params.id || req.params.propertyId;
     
     if (!propertyId) {
@@ -126,7 +126,7 @@ const propertyAccess = async (req, res, next) => {
 // Middleware to check if user can access booking
 const bookingAccess = async (req, res, next) => {
   try {
-    const Booking = require('../models/Booking');
+    const Booking = (await import('../models/Booking.js')).default;
     const bookingId = req.params.id || req.params.bookingId;
     
     if (!bookingId) {
@@ -251,7 +251,7 @@ const optionalAuth = (req, res, next) => {
   }
 };
 
-module.exports = {
+export {
   generateToken,
   protect,
   protectWithCookie,

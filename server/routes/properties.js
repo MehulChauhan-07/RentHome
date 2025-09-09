@@ -1,8 +1,8 @@
-const express = require('express');
-const { body, query, validationResult } = require('express-validator');
-const Property = require('../models/Property');
-const User = require('../models/User');
-const { protect, admin, ownerOrAdmin, optionalAuth } = require('../middleware/auth');
+import express from 'express';
+import { body, query, validationResult } from 'express-validator';
+import Property from '../models/Property.js';
+import User from '../models/User.js';
+import { protect, admin, ownerOrAdmin, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -508,4 +508,4 @@ router.delete('/:id/favorite', protect, async (req, res, next) => {
   }
 });
 
-module.exports = router;
+export default router;

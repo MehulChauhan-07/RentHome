@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const userSchema = new mongoose.Schema({
   // Basic user information
@@ -155,8 +155,7 @@ userSchema.virtual('propertyCount').get(function() {
 });
 
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
+// Note: email and googleId indexes are automatically created by unique: true
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ createdAt: -1 });
@@ -212,4 +211,4 @@ userSchema.pre('remove', async function(next) {
   }
 });
 
-module.exports = mongoose.model('User', userSchema);
+export default mongoose.model('User', userSchema);

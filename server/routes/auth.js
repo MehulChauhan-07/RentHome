@@ -1,8 +1,8 @@
-const express = require('express');
-const passport = require('passport');
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
-const { generateToken, protect } = require('../middleware/auth');
+import express from 'express';
+import passport from 'passport';
+import { body, validationResult } from 'express-validator';
+import User from '../models/User.js';
+import { generateToken, protect } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -391,4 +391,4 @@ router.get('/google/url', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;

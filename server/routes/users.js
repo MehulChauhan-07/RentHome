@@ -1,8 +1,8 @@
-const express = require('express');
-const { body, validationResult } = require('express-validator');
-const User = require('../models/User');
-const Property = require('../models/Property');
-const { protect, admin, resourceOwnerOrAdmin } = require('../middleware/auth');
+import express from 'express';
+import { body, validationResult } from 'express-validator';
+import User from '../models/User.js';
+import Property from '../models/Property.js';
+import { protect, admin, resourceOwnerOrAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -58,7 +58,7 @@ router.get('/properties', protect, async (req, res, next) => {
 // @access  Private
 router.get('/bookings', protect, async (req, res, next) => {
   try {
-    const Booking = require('../models/Booking');
+    const Booking = (await import('../models/Booking.js')).default;
     
     const bookings = await Booking.findByUser(req.user._id);
 
@@ -141,4 +141,4 @@ router.post('/upgrade-to-owner', protect, [
   }
 });
 
-module.exports = router;
+export default router;

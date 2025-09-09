@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const propertySchema = new mongoose.Schema({
   // Basic property information
@@ -335,4 +335,4 @@ propertySchema.methods.updateRating = function(newRating) {
   return this.save();
 };
 
-module.exports = mongoose.model('Property', propertySchema);
+export default mongoose.model('Property', propertySchema);

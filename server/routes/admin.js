@@ -1,9 +1,9 @@
-const express = require('express');
-const { body, query, validationResult } = require('express-validator');
-const User = require('../models/User');
-const Property = require('../models/Property');
-const Booking = require('../models/Booking');
-const { protect, admin } = require('../middleware/auth');
+import express from 'express';
+import { body, query, validationResult } from 'express-validator';
+import User from '../models/User.js';
+import Property from '../models/Property.js';
+import Booking from '../models/Booking.js';
+import { protect, admin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -395,4 +395,4 @@ router.get('/bookings', [
   }
 });
 
-module.exports = router;
+export default router;

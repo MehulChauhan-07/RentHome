@@ -1,10 +1,19 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
-require('dotenv').config({ path: '../.env' });
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+// ES modules compatibility
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Configure dotenv
+dotenv.config({ path: join(__dirname, '../.env') });
 
 // Import models
-const User = require('../models/User');
-const Property = require('../models/Property');
+import User from '../models/User.js';
+import Property from '../models/Property.js';
 
 // Mock data from frontend (converted from the client structure)
 const mockUsers = [
@@ -354,8 +363,8 @@ const seedDatabase = async () => {
 };
 
 // Run the seeding script
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   seedDatabase();
 }
 
-module.exports = { seedDatabase, seedUsers, seedProperties };
+export { seedDatabase, seedUsers, seedProperties };
