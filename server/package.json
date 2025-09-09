@@ -2,15 +2,21 @@
   "name": "renthome-server",
   "version": "1.0.0",
   "description": "RentHome backend server with Express, MongoDB, and Google OAuth2",
-  "main": "server.js",
+  "main": "api/index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node api/index.js",
+    "dev": "nodemon api/index.js",
     "seed": "node scripts/seedData.js",
     "test": "jest"
   },
-  "keywords": ["express", "mongodb", "oauth", "rental", "properties"],
+  "keywords": [
+    "express",
+    "mongodb",
+    "oauth",
+    "rental",
+    "properties"
+  ],
   "author": "RentHome Team",
   "license": "MIT",
   "dependencies": {
